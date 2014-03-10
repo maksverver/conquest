@@ -10,6 +10,7 @@
 class Arbiter
 {
 public:
+    Arbiter(const Map &w, Player &p1, Player &p2, std::ostream *log = 0);
     Arbiter(const World &w, Player &p1, Player &p2, std::ostream *log = 0);
     ~Arbiter();
 
@@ -18,6 +19,8 @@ public:
     int winner() const;
 
 protected:
+    void pick_starting_countries();
+    void initialize_bonus();
     std::vector<Movement> get_attack_transfer_moves(int player);
     void play_placement_phase();
     void play_movement_phase();

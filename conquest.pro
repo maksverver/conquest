@@ -7,6 +7,7 @@ HEADERS += Arbiter.h \
            Player.h \
            SimplePlayer.h \
            SimplePlayer2.h \
+           SimplePlayer3.h \
            GuiPlayer.h \
            world.h
 SOURCES += Arbiter.cpp \
@@ -15,6 +16,7 @@ SOURCES += Arbiter.cpp \
            MapView.cpp \
            SimplePlayer.cpp \
            SimplePlayer2.cpp \
+           SimplePlayer3.cpp \
            GuiPlayer.cpp \
            world.cpp \
            main.cpp

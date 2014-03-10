@@ -1,9 +1,11 @@
 #include "Arbiter.h"
+#include <algorithm>
 #include <assert.h>
 #include <stdlib.h>
 
-static const int timeout_ms     = 2000;
-static const int starting_bonus =    5;
+static const int timeout_ms             = 2000;
+static const int starting_bonus         =    5;
+static const int num_starting_countries =    3;
 
 // Returns a random Boolean which is 1 with probability num/den (approximately).
 static bool prob(int num, int den)
@@ -17,8 +19,27 @@ static const char *player_name(int player)
     return (player > 0) ? "player1" : (player < 0) ? "player2" : "neutral";
 }
 
+Arbiter::Arbiter(const Map &m, Player &p1, Player &p2, std::ostream *l)
+    : world(m), player1(p1), player2(p2), log(l)
+{
+    pick_starting_countries();
+    initialize_bonus();
+    log_map();
+}
+
 Arbiter::Arbiter(const World &w, Player &p1, Player &p2, std::ostream *l)
     : world(w), player1(p1), player2(p2), log(l)
+{
+    initialize_bonus();
+    log_map();
+}
+
+Arbiter::~Arbiter()
+{
+    delete[] continent_countries;
+}
+
+void Arbiter::initialize_bonus()
 {
     total_countries[0] = 0;
     total_countries[1] = 0;
@@ -41,13 +62,43 @@ Arbiter::Arbiter(const World &w, Player &p1, Player &p2, std::ostream *l)
             bonus[o < 0] += world.map.continents[c].bonus;
         }
     }
-
-    log_map();
 }
 
-Arbiter::~Arbiter()
+void Arbiter::pick_starting_countries()
 {
-    delete[] continent_countries;
+    // Pick list of starting options; two per continent
+    std::vector<int> options;
+    for (size_t i = 0; i < world.map.continents.size(); ++i)
+    {
+        std::vector<int> countries = world.map.continents[i].countries;
+        assert(countries.size() >= 2);
+        std::random_shuffle(countries.begin(), countries.end());
+        options.push_back(countries[0]);
+        options.push_back(countries[1]);
+    }
+    std::random_shuffle(options.begin(), options.end());
+    assert(options.size() >= 2*num_starting_countries);
+
+    // Get preferences from players:
+    std::vector<int> prefs[2] = {
+        player1.pick_starting_countries(world, options, num_starting_countries, timeout_ms),
+        player2.pick_starting_countries(world, options, num_starting_countries, timeout_ms) };
+
+    // Assign initial countries, breaking conflicts randomly:
+    int idx[2] = { 0, 0 };
+    for (int n = 0; n < num_starting_countries; ++n)
+    {
+        while (world.occupations[prefs[0][idx[0]]].owner != 0) ++idx[0];
+        while (world.occupations[prefs[1][idx[1]]].owner != 0) ++idx[1];
+        if (prefs[0][idx[0]] == prefs[1][idx[1]])
+        {
+            int i = prob(1, 2);  // player i gives up his choice
+            while ( prefs[i][idx[i]] == prefs[1 - i][idx[1 - i]] ||
+                    world.occupations[prefs[i][idx[i]]].owner != 0) ++idx[i];
+        }
+        world.occupations[prefs[0][idx[0]++]].owner = +1;
+        world.occupations[prefs[1][idx[1]++]].owner = -1;
+    }
 }
 
 int Arbiter::winner() const

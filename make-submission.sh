@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
 ZIPFILE=submission.zip
-SOURCES=(SimplePlayer2.cpp world.cpp client.cpp)
-HEADERS=(SimplePlayer2.h Player.h world.h)
+SOURCES=(SimplePlayer3.cpp world.cpp client.cpp)
+HEADERS=(SimplePlayer3.h Player.h world.h)
 DIR=`pwd`
 
 echo "Creating: $DIR/$ZIPFILE"

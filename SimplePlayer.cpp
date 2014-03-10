@@ -13,7 +13,7 @@ vector<int> SimplePlayer::pick_starting_countries(
 {
     // For now, just pick randomly:
     random_shuffle(options.begin(), options.end());
-    while (options.size() > (size_t)num_countries) options.pop_back();
+    while (options.size() > (size_t)(2*num_countries)) options.pop_back();
     return options;
 }
 

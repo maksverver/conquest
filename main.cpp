@@ -3,43 +3,30 @@
 #include "GuiPlayer.h"
 #include "SimplePlayer.h"
 #include "SimplePlayer2.h"
+#include "SimplePlayer3.h"
 #include <QApplication>
-#include <iostream>
 #include <assert.h>
+#include <iostream>
+#include <memory>
 #include <time.h>
 
 static const Map the_map = Map::getDefault();
+static const int max_turns = 100;
 
-World random_starting_world()
+static Player *create_player(QString name)
 {
-    World world(the_map);
-
-    // Pick list of starting options; two per continent
-    std::vector<int> options;
-    for (size_t i = 0; i < world.map.continents.size(); ++i)
-    {
-        std::vector<int> countries = world.map.continents[i].countries;
-        assert(countries.size() >= 2);
-        std::random_shuffle(countries.begin(), countries.end());
-        options.push_back(countries[0]);
-        options.push_back(countries[1]);
-    }
-
-    // Randomly assign to players:
-    std::random_shuffle(options.begin(), options.end());
-    assert(options.size() >= 6);
-    for (int i = 0; i < 6; ++i)
-    {
-        world.occupations[options[i]].owner = 1 - 2*(i%2);
-    }
-
-    return world;
+    if (name == "gui")     return new GuiPlayer();
+    if (name == "simple1") return new SimplePlayer();
+    if (name == "simple2") return new SimplePlayer2();
+    if (name == "simple3") return new SimplePlayer3();
+    return NULL;
 }
 
 int main(int argc, char *argv[])
 {
     srand(time(NULL));
-    if (argc == 2 && QString(argv[1]) == "-")
+
+    if (argc == 2 && QString(argv[1]) == "visualize")
     {
         // Analysis mode -- read visualization data from stdin.
         QApplication app(argc, argv);
@@ -47,35 +34,73 @@ int main(int argc, char *argv[])
         main_window.show();
         return app.exec();
     }
-    else
+
+    if (argc == 4 && QString(argv[1]) == "play")
     {
-        if (true)
+        // Play one game, and print log to stdout:
+        std::auto_ptr<Player> player1(create_player(argv[2]));
+        if (!player1.get())
         {
-            // Play one game, and print log to stdout:
-            SimplePlayer  player1;
-            SimplePlayer2 player2;
-            World world = random_starting_world();
-            Arbiter arbiter(world, player1, player2, &std::cout);
-            int winner = arbiter.play_game(100);
-            std::cout << ( winner > 0 ? "player1" :
-                           winner < 0 ? "player2" : "Nobody" )
-                       << " won" << std::endl;
+            std::cerr << "Couldn't create player 1!\n";
+            return 1;
         }
-        else
+        std::auto_ptr<Player> player2(create_player(argv[3]));
+        if (!player2.get())
         {
-            int x = 0, y = 0;
-            for (int n = 0; n < 1000; ++n)
-            {
-                SimplePlayer  player1;
-                SimplePlayer2 player2;
-                World world = random_starting_world();
-                Arbiter arbiter(world, player1, player2);
-                int winner = arbiter.play_game(100);
-                if (winner > 0) { ++x; std::cerr << '1'; } else
-                if (winner < 0) { ++y; std::cerr << '2'; } else std::cerr << '0';
-                if ((n + 1) % 100 == 0) std::cerr << '\n';
-            }
-            std::cout << x << " vs " << y << std::endl;
+            std::cerr << "Couldn't create player 2!\n";
+            return 1;
         }
+        Arbiter arbiter(the_map, *player1, *player2, &std::cout);
+        int winner = arbiter.play_game(max_turns);
+        std::cout << ( winner > 0 ? "player1" :
+                       winner < 0 ? "player2" : "Nobody" ) << " won" << '\n';
+        return 0;
     }
+
+    if (argc == 5 && QString(argv[1]) == "benchmark")
+    {
+        int num_games = QString(argv[4]).toInt();
+        int player1_wins = 0, player2_wins = 0;
+        for (int n = 0; n < num_games; ++n)
+        {
+            std::auto_ptr<Player> player1(create_player(argv[2]));
+            if (!player1.get())
+            {
+                std::cerr << "Couldn't create player 1!\n";
+                return 1;
+            }
+            std::auto_ptr<Player> player2(create_player(argv[3]));
+            if (!player2.get())
+            {
+                std::cerr << "Couldn't create player 2!\n";
+                return 1;
+            }
+            Arbiter arbiter(the_map, *player1, *player2);
+            int winner = arbiter.play_game(max_turns);
+            if (winner > 0)
+            {
+                std::cerr << '1';
+                ++player1_wins;
+            }
+            else
+            if (winner < 0)
+            {
+                std::cerr << '2';
+                ++player2_wins;
+            }
+            else
+            {
+                std::cerr << '0';
+            }
+            if ((n + 1)%100 == 0) std::cerr << '\n';
+        }
+        if (num_games%100 != 0) std::cerr << '\n';
+        std::cout << player1_wins << " vs " << player2_wins << std::endl;
+        return 0;
+    }
+
+    std::cout << "Usage:\n"
+        << "\tconquest visualize\n"
+        << "\tconquest play <player1> <player2>\n"
+        << "\tconquest benchmark <player1> <player2> <num_games>\n";
 }
