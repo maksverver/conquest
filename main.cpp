@@ -8,15 +8,17 @@
 #include <assert.h>
 #include <time.h>
 
+static const Map the_map = Map::getDefault();
+
 World random_starting_world()
 {
-    World world = World::getDefault();
+    World world(the_map);
 
     // Pick list of starting options; two per continent
     std::vector<int> options;
-    for (size_t i = 0; i < world.continents.size(); ++i)
+    for (size_t i = 0; i < world.map.continents.size(); ++i)
     {
-        std::vector<int> countries = world.continents[i].countries;
+        std::vector<int> countries = world.map.continents[i].countries;
         assert(countries.size() >= 2);
         std::random_shuffle(countries.begin(), countries.end());
         options.push_back(countries[0]);
@@ -28,7 +30,7 @@ World random_starting_world()
     assert(options.size() >= 6);
     for (int i = 0; i < 6; ++i)
     {
-        world.countries[options[i]].owner = 1 - 2*(i%2);
+        world.occupations[options[i]].owner = 1 - 2*(i%2);
     }
 
     return world;
@@ -47,13 +49,12 @@ int main(int argc, char *argv[])
     }
     else
     {
-        World world = random_starting_world();
-        SimplePlayer  player1;
-        SimplePlayer2 player2;
-
         if (true)
         {
-            // Print one game, and print log to stdout:
+            // Play one game, and print log to stdout:
+            SimplePlayer  player1;
+            SimplePlayer2 player2;
+            World world = random_starting_world();
             Arbiter arbiter(world, player1, player2, &std::cout);
             int winner = arbiter.play_game(100);
             std::cout << ( winner > 0 ? "player1" :
@@ -65,6 +66,9 @@ int main(int argc, char *argv[])
             int x = 0, y = 0;
             for (int n = 0; n < 1000; ++n)
             {
+                SimplePlayer  player1;
+                SimplePlayer2 player2;
+                World world = random_starting_world();
                 Arbiter arbiter(world, player1, player2);
                 int winner = arbiter.play_game(100);
                 if (winner > 0) { ++x; std::cerr << '1'; } else

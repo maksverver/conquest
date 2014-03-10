@@ -78,7 +78,7 @@ MapView::MapView(QWidget *parent)
     setScene(scene);
     setRenderHint(QPainter::Antialiasing);
 
-    World world = World::getDefault();
+    Map map = Map::getDefault();
 
     for (int i = 0; i < num_nodes; ++i)
     {
@@ -95,11 +95,11 @@ MapView::MapView(QWidget *parent)
         country_texts.push_back(label);
     }
 
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    for (size_t i = 0; i < map.countries.size(); ++i)
     {
-        for (size_t n = 0; n < world.countries[i].neighbours.size(); ++n)
+        for (size_t n = 0; n < map.countries[i].neighbours.size(); ++n)
         {
-            int j = world.countries[i].neighbours[n];
+            int j = map.countries[i].neighbours[n];
             edge_index[std::make_pair((int)i, (int)j)] = edge_polygons.size();
 
             QPointF p = node_locations[i];
@@ -194,11 +194,11 @@ void MapView::updateWorld( const World &world,
                            const Placement *placements, size_t nplacement,
                            const Movement *movements, size_t nmovement )
 {
-    assert(world.countries.size() == num_nodes);
+    assert(world.map.countries.size() == num_nodes);
     for (int i = 0; i < num_nodes; ++i)
     {
-        int o = world.countries[i].owner;
-        int a = world.countries[i].armies;
+        int o = world.occupations[i].owner;
+        int a = world.occupations[i].armies;
         country_circles[i]->setBrush( a == 0 ? circle_brush_inactive :
                                       o > 0  ? circle_brush_player1 :
                                       o < 0  ? circle_brush_player2 :
@@ -242,7 +242,7 @@ void MapView::updateWorld( const World &world,
         }
         else
         {
-            int o = world.countries[edge->src].owner;
+            int o = world.occupations[edge->src].owner;
             edge_polygons[k]->setBrush( o > 0 ? edge_brush_player1 :
                                         o < 0 ? edge_brush_player2 :
                                                 edge_brush_neutral );

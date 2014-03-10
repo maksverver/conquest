@@ -25,7 +25,7 @@ protected:
                        const std::vector<Placement> &placements );
     void attack_transfer( int player, const Movement &movement,
                           std::vector<int> &reinforcements );
-    void change_owner(Country &country, int new_owner);
+    void change_owner(int country, int new_owner);
 
     void log_map(std::vector<int> *reinforcements = 0);
 

@@ -22,31 +22,31 @@ vector<int> SimplePlayer2::pick_starting_countries(
 vector<Placement> SimplePlayer2::place_armies(
     const World &world, int num_armies, int UNUSED timeout_ms )
 {
-    vector<char> nearby_continent(world.continents.size(), 0);
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    vector<char> nearby_continent(world.map.continents.size(), 0);
+    for (size_t i = 0; i < world.map.countries.size(); ++i)
     {
-        const Country &cy = world.countries[i];
-        if (cy.owner <= 0) continue;
+        if (world.occupations[i].owner <= 0) continue;
+        const Country &cy = world.map.countries[i];
         nearby_continent[cy.continent] = true;
         for (size_t n = 0; n < cy.neighbours.size(); ++n)
         {
-            nearby_continent[world.countries[cy.neighbours[n]].continent] = true;
+            nearby_continent[world.map.countries[cy.neighbours[n]].continent] = true;
         }
     }
 
     this->best_continent = -1;
     int best_score = 0;
-    for (size_t i = 0; i < world.continents.size(); ++i)
+    for (size_t i = 0; i < world.map.continents.size(); ++i)
     {
         if (!nearby_continent[i]) continue;
 
         int my_countries = 0, opponent_armies = 0,
             opponent_countries = 0, neutral_countries = 0;
-        for (size_t j = 0; j < world.continents[i].countries.size(); ++j)
+        for (size_t j = 0; j < world.map.continents[i].countries.size(); ++j)
         {
-            const Country &cy = world.countries[world.continents[i].countries[j]];
-            if (cy.owner > 0) ++my_countries;
-            else if (cy.owner < 0) ++opponent_countries, opponent_armies += cy.armies;
+            const Occupation &occ = world.occupations[world.map.continents[i].countries[j]];
+            if (occ.owner > 0) ++my_countries;
+            else if (occ.owner < 0) ++opponent_countries, opponent_armies += occ.armies;
             else ++neutral_countries;
         }
         if (neutral_countries + opponent_countries == 0) continue;
@@ -55,7 +55,7 @@ vector<Placement> SimplePlayer2::place_armies(
         score = 500
               - 10*(neutral_countries + opponent_countries) 
               - opponent_armies
-              + 5*world.continents[i].bonus;
+              + 5*world.map.continents[i].bonus;
         if (score > best_score)
         {
             best_score = score;
@@ -66,19 +66,19 @@ vector<Placement> SimplePlayer2::place_armies(
 
     // Put all reinforcements on the country with the most hostile armies
     vector<pair<int, int> > options;
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    for (size_t i = 0; i < world.occupations.size(); ++i)
     {
-        if (world.countries[i].owner <= 0) continue;
+        if (world.occupations[i].owner <= 0) continue;
 
         int score = 0;
-        const vector<int> &neighbours = world.countries[i].neighbours;
+        const vector<int> &neighbours = world.map.countries[i].neighbours;
         for ( vector<int>::const_iterator it = neighbours.begin();
                 it != neighbours.end(); ++it )
         {
-            const Country &neighbour = world.countries[*it];
-            if (neighbour.continent == best_continent && neighbour.owner <= 0)
+            if ( world.map.countries[*it].continent == best_continent &&
+                 world.occupations[*it].owner <= 0 )
             {
-                score += neighbour.armies;
+                score += world.occupations[*it].armies;
             }
         }
         options.push_back(make_pair(score, (int)i));
@@ -96,30 +96,29 @@ vector<Movement> SimplePlayer2::attack_transfer(
     const World &world, int UNUSED timeout_ms )
 {
     // Find fringe countries
-    vector<char> fringe(world.countries.size(), 0);
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    vector<char> fringe(world.map.countries.size(), 0);
+    for (size_t i = 0; i < world.map.countries.size(); ++i)
     {
-        if (world.countries[i].owner <= 0) continue;
+        if (world.occupations[i].owner <= 0) continue;
 
-        const vector<int> &neighbours = world.countries[i].neighbours;
+        const vector<int> &neighbours = world.map.countries[i].neighbours;
         for ( vector<int>::const_iterator it = neighbours.begin();
                 it != neighbours.end(); ++it )
         {
-            const Country &neighbour = world.countries[*it];
-            if (neighbour.owner <= 0) fringe[i] = true;
+            if (world.occupations[*it].owner <= 0) fringe[i] = true;
         }
     }
 
     vector<Movement> movements;
-    vector<char> attacked(world.countries.size(), 0);
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    vector<char> attacked(world.occupations.size(), 0);
+    for (size_t i = 0; i < world.occupations.size(); ++i)
     {
-        if (world.countries[i].owner <= 0) continue;
+        if (world.occupations[i].owner <= 0) continue;
 
-        int armies = world.countries[i].armies - 1;
+        int armies = world.occupations[i].armies - 1;
         if (armies <= 0) continue;
 
-        const vector<int> &neighbours = world.countries[i].neighbours;
+        const vector<int> &neighbours = world.map.countries[i].neighbours;
 
         if (!fringe[i])
         {
@@ -142,10 +141,10 @@ vector<Movement> SimplePlayer2::attack_transfer(
                 it != neighbours.end(); ++it )
         {
             if (attacked[*it]) continue;
-            const Country &neighbour = world.countries[*it];
-            if (neighbour.continent == best_continent && neighbour.owner < 0)
+            if ( world.map.countries[*it].continent == best_continent &&
+                 world.occupations[*it].owner < 0 )
             {
-                int needed = neighbour.armies*10/6 + 2;
+                int needed = world.occupations[*it].armies*10/6 + 2;
                 if (armies >= needed)
                 {
                     Movement movement = { (int)i, *it, needed };
@@ -156,7 +155,7 @@ vector<Movement> SimplePlayer2::attack_transfer(
             }
         }
 
-        if (armies < world.countries[i].armies - 1)
+        if (armies < world.occupations[i].armies - 1)
         {
             movements.back().armies += armies;
             continue;
@@ -166,19 +165,21 @@ vector<Movement> SimplePlayer2::attack_transfer(
         for ( vector<int>::const_iterator it = neighbours.begin();
                 it != neighbours.end(); ++it )
         {
-            const Country &neighbour = world.countries[*it];
-            if (neighbour.continent == best_continent && neighbour.owner == 0)
+            if (attacked[*it]) continue;
+            if ( world.map.countries[*it].continent == best_continent &&
+                 world.occupations[*it].owner == 0 )
             {
-                int needed = 2*neighbour.armies;
+                int needed = world.occupations[*it].armies*10/6 + 2;
                 if (armies >= needed)
                 {
                     Movement movement = { (int)i, *it, needed };
                     movements.push_back(movement);
                     armies -= needed;
+                    attacked[*it] = true;
                 }
             }
         }
-        if (armies < world.countries[i].armies - 1)
+        if (armies < world.occupations[i].armies - 1)
         {
             movements.back().armies += armies;
             continue;

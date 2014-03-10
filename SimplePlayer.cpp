@@ -23,18 +23,18 @@ vector<Placement> SimplePlayer::place_armies(
     // Put all reinforcements on the country with the most hostile armies
     // nearby (breaking ties by the most neutral armies).
     vector<pair<pair<int,int>, int> > options;
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    for (size_t i = 0; i < world.occupations.size(); ++i)
     {
-        if (world.countries[i].owner > 0)
+        if (world.occupations[i].owner > 0)
         {
             pair<int,int> score;
-            const vector<int> &neighbours = world.countries[i].neighbours;
+            const vector<int> &neighbours = world.map.countries[i].neighbours;
             for ( vector<int>::const_iterator it = neighbours.begin();
                   it != neighbours.end(); ++it )
             {
-                const Country &neighbour = world.countries[*it];
-                if (neighbour.owner <  0) score.first += neighbour.armies;
-                if (neighbour.owner == 0) score.second += neighbour.armies;
+                const Occupation &occ = world.occupations[*it];
+                if (occ.owner <  0) score.first  += occ.armies;
+                if (occ.owner == 0) score.second += occ.armies;
             }
             options.push_back(make_pair(score, (int)i));
         }
@@ -54,24 +54,24 @@ vector<Movement> SimplePlayer::attack_transfer(
 {
     // Aggressively attack!
     vector<Movement> movements;
-    for (size_t i = 0; i < world.countries.size(); ++i)
+    for (size_t i = 0; i < world.map.countries.size(); ++i)
     {
-        const Country &cy = world.countries[i];
-        if (cy.owner > 0 && cy.armies > 1)
+        const Occupation &occ = world.occupations[i];
+        if (occ.owner > 0 && occ.armies > 1)
         {
             vector<pair<int,int> > score;
-            for (vector<int>::const_iterator it = cy.neighbours.begin(); it != cy.neighbours.end(); ++it)
+            const vector<int> &neighbours = world.map.countries[i].neighbours;
+            for (vector<int>::const_iterator it = neighbours.begin(); it != neighbours.end(); ++it)
             {
-                const Country &neighbour = world.countries[*it];
-                if (neighbour.owner <= 0)
+                if (world.occupations[*it].owner <= 0)
                 {
-                    score.push_back(make_pair(neighbour.armies, *it));
+                    score.push_back(make_pair(world.occupations[*it].armies, *it));
                 }
             }
             if (!score.empty())
             {
                 sort(score.begin(), score.end());
-                int armies_left = cy.armies - 1;
+                int armies_left = occ.armies - 1;
                 size_t n = 0;  // number of attacks
                 while (n < score.size())
                 {

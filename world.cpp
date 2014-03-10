@@ -1,5 +1,6 @@
 #include "world.h"
-#include <cstdlib>
+#include <assert.h>
+#include <stdlib.h>
 #include <algorithm>
 
 template<class T>
@@ -8,7 +9,7 @@ void insert_sorted(std::vector<T> &v, const T &x)
     v.insert(std::lower_bound(v.begin(), v.end(), x), x);
 }
 
-World World::getDefault()
+Map Map::getDefault()
 {
     static const int num_nodes  = 42;
     static const int num_groups =  6;
@@ -43,38 +44,31 @@ World World::getDefault()
         { 33,38 }, { 34,35 }, { 36,37 }, { 37,38 }, { 38,39 }, { 39,40 },
         { 39,41 }, { 40,41 }, { 40,42 }, { 41,42 } };
 
-
-    World world;
-    world.continents.reserve(num_groups);
+    Map map;
+    map.continents.reserve(num_groups);
     for (int n = 0; n < num_groups; ++n)
     {
-        Continent ct = Continent();
-        ct.id    = n + 1;
-        ct.bonus = bonus[n];
-        world.continents.push_back(ct);
+        Continent ct =  { n + 1, bonus[n], std::vector<int>() };
+        map.continents.push_back(ct);
     }
-    world.countries.reserve(num_nodes);
+    map.countries.reserve(num_nodes);
     for (int n = 0; n < num_nodes; ++n)
     {
-        Country cy = Country();
-        cy.id        = n + 1;
-        cy.continent = groups[n] - 1;
-        cy.owner     = 0;
-        cy.armies    = 2;
-        world.countries.push_back(cy);
-        world.continents[cy.continent].countries.push_back(n);
+        Country cy = { n + 1, groups[n] - 1, std::vector<int>() };
+        map.countries.push_back(cy);
+        map.continents[cy.continent].countries.push_back(n);
     }
     for (int n = 0; n < num_edges; ++n)
     {
         int i = edges[n][0] - 1;
         int j = edges[n][1] - 1;
-        insert_sorted(world.countries[i].neighbours, j);
-        insert_sorted(world.countries[j].neighbours, i);
+        insert_sorted(map.countries[i].neighbours, j);
+        insert_sorted(map.countries[j].neighbours, i);
     }
-    return world;
+    return map;
 }
 
-int World::continent_index(int continent_id) const
+int Map::continent_index(int continent_id) const
 {
     for (size_t i = 0; i < continents.size(); ++i)
     {
@@ -83,7 +77,7 @@ int World::continent_index(int continent_id) const
     return -1;
 }
 
-int World::country_index(int country_id) const
+int Map::country_index(int country_id) const
 {
     for (size_t i = 0; i < countries.size(); ++i)
     {
@@ -92,37 +86,51 @@ int World::country_index(int country_id) const
     return -1;
 }
 
-void World::applyFog(int player)
+World::World(const Map &m)
+    : map(m)
 {
-    for (size_t i = 0; i < countries.size(); ++i)
-    {
-        if (countries[i].armies > 0)
-        {
-            bool visible = countries[i].owner == player;
-            if (!visible)
-            {
-                for (size_t n = 0; n < countries[i].neighbours.size(); ++n)
-                {
-                    if (countries[countries[i].neighbours[n]].owner == player)
-                    {
-                        visible = true;
-                        break;
-                    }
-                }
-            }
-            if (!visible)
-            {
-                countries[i].owner = 0;
-                countries[i].armies = 0;
-            }
-        }
-    }
+    Occupation initial_occupation = { 0 /* owner */, 2 /* armies */ };
+    occupations.assign(m.countries.size(), initial_occupation);
 }
 
-void World::dualize()
+World::World(const World &world)
+    : map(world.map), occupations(world.occupations)
 {
-    for (size_t i = 0; i < countries.size(); ++i)
+}
+
+World::World(const World &world, int player)
+    : map(world.map), occupations(world.occupations)
+{
+    assert(player == +1 || player == -1);
+
+    // Apply fog-of-war
+    for (size_t i = 0; i < occupations.size(); ++i)
     {
-        countries[i].owner = -countries[i].owner;
+        bool visible = occupations[i].owner == player;
+        if (!visible)
+        {
+            for (size_t n = 0; n < map.countries[i].neighbours.size(); ++n)
+            {
+                if (occupations[map.countries[i].neighbours[n]].owner == player)
+                {
+                    visible = true;
+                    break;
+                }
+            }
+        }
+        if (!visible)
+        {
+            occupations[i].owner = 0;
+            occupations[i].armies = 0;
+        }
+    }
+
+    if (player < 0)
+    {
+        // Invert owner ids so that +1 refers to the current player:
+        for (size_t i = 0; i < occupations.size(); ++i)
+        {
+            occupations[i].owner = -occupations[i].owner;
+        }
     }
 }

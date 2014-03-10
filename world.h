@@ -12,20 +12,33 @@ struct Continent
 struct Country
 {
     int              id, continent;
-    int              owner, armies;
     std::vector<int> neighbours;
 };
 
-struct World
+struct Map
 {
+    static Map getDefault();
+
     std::vector<Continent>  continents;
     std::vector<Country>    countries;
 
     int continent_index(int continent_id) const;
     int country_index(int country_id) const;
-    static World getDefault();
-    void applyFog(int player);
-    void dualize();
+};
+
+struct Occupation
+{
+    int owner, armies;
+};
+
+struct World
+{
+    World(const Map &map);
+    World(const World &world);
+    World(const World &world, int player);
+
+    const Map &map;
+    std::vector<Occupation> occupations;
 };
 
 struct Placement

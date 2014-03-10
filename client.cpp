@@ -202,8 +202,8 @@ int main()
                     {
                         if (armies > 0 && armies < 1000000000)
                         {
-                            world.countries[i].owner  = owner;
-                            world.countries[i].armies = armies;
+                            world.occupations[i].owner  = owner;
+                            world.occupations[i].armies = armies;
                         }
                         else
                         {

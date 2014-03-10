@@ -28,14 +28,14 @@ void MapControl::update()
 bool MapControl::incNode(int i)
 {
     // Verify that the source node belongs to us:
-    if (world.countries[i].owner != player) return false;
+    if (world.occupations[i].owner != player) return false;
 
     // Verify that we have armies left to place:
     if (armies <= 0) return false;
 
     // Verify that the clicked node has not yet been moved from:
     for ( std::vector<Movement>::iterator it = movements.begin();
-            it != movements.end(); ++it )
+          it != movements.end(); ++it )
     {
         if (it->src == i) return false;
     }
@@ -84,10 +84,10 @@ bool MapControl::decNode(int i)
 bool MapControl::incEdge(int i, int j)
 {
     // Verify that the source node belongs to us:
-    if (world.countries[i].owner != player) return false;
+    if (world.occupations[i].owner != player) return false;
 
     // Check how many armies the source node has left:
-    int left = world.countries[i].armies - 1;
+    int left = world.occupations[i].armies - 1;
     for ( std::vector<Placement>::iterator it = placements.begin();
           it != placements.end(); ++it )
     {
