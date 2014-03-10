@@ -167,10 +167,6 @@ int main()
         else
         if (command == "pick_starting_regions")
         {
-            // Initialize world using current map data:
-            Occupation initial_occupation = { 2 /* owner */, 0 /* armies */ };
-            world.occupations.assign(map.countries.size(), initial_occupation);
-
             int timeout = 0;
             iss >> timeout;
             std::vector<int> options;
@@ -194,6 +190,9 @@ int main()
         else
         if (command == "update_map")
         {
+            Occupation initial_occupation = { 0, 0 };
+            world.occupations.assign(map.countries.size(), initial_occupation);
+
             int country_id;
             std::string name;
             int armies;
