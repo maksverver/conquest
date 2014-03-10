@@ -42,7 +42,8 @@ int main()
     srand(time(NULL));
 
     // Client state:
-    World world                 = World();
+    Map map;
+    World world(map);
     std::string your_bot_id     = "YOUR_BOT_ID";
     std::string opponent_bot_id = "OPPONENT_BOT_ID";
     int starting_armies         = 5;
@@ -90,24 +91,24 @@ int main()
             iss >> key;
             if (key == "super_regions")
             {
-                world.continents.clear();
+                map.continents.clear();
                 Continent ct = Continent();
-                while (iss >> ct.id >> ct.bonus) world.continents.push_back(ct);
+                while (iss >> ct.id >> ct.bonus) map.continents.push_back(ct);
             }
             else
             if (key == "regions")
             {
-                world.countries.clear();
+                map.countries.clear();
                 int continent_id;
                 Country cy = Country();
                 while (iss >> cy.id >> continent_id)
                 {
-                    int ct = world.continent_index(continent_id);
+                    int ct = map.continent_index(continent_id);
                     if (cy.continent >= 0)
                     {
-                        world.continents[ct].countries.push_back(world.countries.size());
+                        map.continents[ct].countries.push_back(map.countries.size());
                         cy.continent = ct;
-                        world.countries.push_back(cy);
+                        map.countries.push_back(cy);
                     }
                     else
                     {
@@ -120,13 +121,13 @@ int main()
             {
                 int country_id;
                 std::string neighbours;
-                for (size_t i = 0; i < world.countries.size(); ++i)
+                for (size_t i = 0; i < map.countries.size(); ++i)
                 {
-                    world.countries[i].neighbours.clear();
+                    map.countries[i].neighbours.clear();
                 }
                 while (iss >> country_id >> neighbours)
                 {
-                    int i = world.country_index(country_id);
+                    int i = map.country_index(country_id);
                     if (i >= 0)
                     {
                         std::replace(neighbours.begin(), neighbours.end(), ',', ' ');
@@ -134,11 +135,11 @@ int main()
                         int neighbour_id;
                         while (neighbours_iss >> neighbour_id)
                         {
-                            int j = world.country_index(neighbour_id);
+                            int j = map.country_index(neighbour_id);
                             if (j >= 0)
                             {
-                                world.countries[i].neighbours.push_back(j);
-                                world.countries[j].neighbours.push_back(i);
+                                map.countries[i].neighbours.push_back(j);
+                                map.countries[j].neighbours.push_back(i);
                             }
                             else
                             {
@@ -151,9 +152,9 @@ int main()
                         std::cerr << "Unknown country-id: " << country_id << "!\n";
                     }
                 }
-                for (size_t i = 0; i < world.countries.size(); ++i)
+                for (size_t i = 0; i < map.countries.size(); ++i)
                 {
-                    std::vector<int> &v = world.countries[i].neighbours;
+                    std::vector<int> &v = map.countries[i].neighbours;
                     std::sort(v.begin(), v.end());
                     v.erase(std::unique(v.begin(), v.end()), v.end());
                 }
@@ -166,13 +167,17 @@ int main()
         else
         if (command == "pick_starting_regions")
         {
+            // Initialize world using current map data:
+            Occupation initial_occupation = { 2 /* owner */, 0 /* armies */ };
+            world.occupations.assign(map.countries.size(), initial_occupation);
+
             int timeout = 0;
             iss >> timeout;
             std::vector<int> options;
             int country_id;
             while (iss >> country_id)
             {
-                int i = world.country_index(country_id);
+                int i = map.country_index(country_id);
                 if (i >= 0) options.push_back(i);
                 else std::cerr << "Unknown country-id: " << country_id << "!\n";
             }
@@ -182,7 +187,7 @@ int main()
             for (size_t i = 0; i < selection.size(); ++i)
             {
                 if (i > 0) std::cout << ' ';
-                std::cout << world.countries[selection[i]].id;
+                std::cout << map.countries[selection[i]].id;
             }
             std::cout << std::endl;
         }
@@ -194,7 +199,7 @@ int main()
             int armies;
             while (iss >> country_id >> name >> armies)
             {
-                int i = world.country_index(country_id);
+                int i = map.country_index(country_id);
                 if (i >= 0)
                 {
                     int owner = (name == your_bot_id) - (name == opponent_bot_id);
@@ -247,12 +252,12 @@ int main()
                     {
                         if (it != placements.begin()) std::cout << ',';
                         std::cout << your_bot_id << " place_armies "
-                                  << world.countries[it->dst].id << ' '
+                                  << map.countries[it->dst].id << ' '
                                   << it->armies;
 
                         // NOTE: state is also updated here, because we only
                         //       get map updates after attack/transfer phase:
-                        world.countries[it->dst].armies += it->armies;
+                        world.occupations[it->dst].armies += it->armies;
                     }
                     std::cout << std::endl;
                 }
@@ -273,8 +278,8 @@ int main()
                     {
                         if (it != movements.begin()) std::cout << ',';
                         std::cout << your_bot_id << " attack/transfer "
-                                  << world.countries[it->src].id << ' '
-                                  << world.countries[it->dst].id << ' '
+                                  << map.countries[it->src].id << ' '
+                                  << map.countries[it->dst].id << ' '
                                   << it->armies;
                     }
                     std::cout << std::endl;
