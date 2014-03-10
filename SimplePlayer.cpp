@@ -1,7 +1,6 @@
 #include "SimplePlayer.h"
 #include <algorithm>
 #include <utility>
-#include <iostream>  // debug
 using namespace std;
 
 #ifdef __GNUC__

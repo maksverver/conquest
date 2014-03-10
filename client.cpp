@@ -1,7 +1,7 @@
 /* Plays a game of Conquest using the AI Games protocol. */
 
 #include "Player.h"
-#include "SimplePlayer.h"
+#include "SimplePlayer2.h"
 
 #include <algorithm>
 #include <memory>
@@ -48,7 +48,7 @@ int main()
     int starting_armies         = 5;
 
     // Actual player instance:
-    std::auto_ptr<Player> player(new SimplePlayer());
+    std::auto_ptr<Player> player(new SimplePlayer2());
 
     // Process input, line by line:
     std::string line;

@@ -1,13 +1,13 @@
 #!/bin/bash -e
 
 ZIPFILE=submission.zip
-SOURCES=(SimplePlayer.cpp world.cpp client.cpp)
-HEADERS=(Player.h SimplePlayer.h world.h)
+SOURCES=(SimplePlayer2.cpp world.cpp client.cpp)
+HEADERS=(SimplePlayer2.h Player.h world.h)
 DIR=`pwd`
 
 echo "Creating: $DIR/$ZIPFILE"
 rm -f "$ZIPFILE"
-zip "$ZIPFILE" "${HEADERS[@]}" "${SOURCES[@]}" 
+zip "$ZIPFILE" "${HEADERS[@]}" "${SOURCES[@]}"
 
 TMP=`mktemp -d`
 if chmod 700 "$TMP" &&  cd "$TMP" && unzip "$DIR"/"$ZIPFILE" && \

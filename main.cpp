@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 #include "GuiPlayer.h"
 #include "SimplePlayer.h"
+#include "SimplePlayer2.h"
 #include <QApplication>
 #include <iostream>
 #include <assert.h>
@@ -47,13 +48,30 @@ int main(int argc, char *argv[])
     else
     {
         World world = random_starting_world();
-        SimplePlayer player1;
-        GuiPlayer player2;
+        SimplePlayer  player1;
+        SimplePlayer2 player2;
 
-        Arbiter arbiter(world, player1, player2, &std::cout);
-        int winner = arbiter.play_game(100);
-        std::cout << ( winner > 0 ? "player1" :
-                       winner < 0 ? "player2" : "Nobody" )
-                  << " won" << std::endl;
+        if (true)
+        {
+            // Print one game, and print log to stdout:
+            Arbiter arbiter(world, player1, player2, &std::cout);
+            int winner = arbiter.play_game(100);
+            std::cout << ( winner > 0 ? "player1" :
+                           winner < 0 ? "player2" : "Nobody" )
+                       << " won" << std::endl;
+        }
+        else
+        {
+            int x = 0, y = 0;
+            for (int n = 0; n < 1000; ++n)
+            {
+                Arbiter arbiter(world, player1, player2);
+                int winner = arbiter.play_game(100);
+                if (winner > 0) { ++x; std::cerr << '1'; } else
+                if (winner < 0) { ++y; std::cerr << '2'; } else std::cerr << '0';
+                if ((n + 1) % 100 == 0) std::cerr << '\n';
+            }
+            std::cout << x << " vs " << y << std::endl;
+        }
     }
 }

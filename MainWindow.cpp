@@ -31,7 +31,7 @@ MainWindow::MainWindow()
                 strings.push_back(line);
                 QTreeWidgetItem *new_item = new QTreeWidgetItem(strings);
                 new_item->setData(0, 1, map_line);
-                if (tokens[0] != "round")
+                if (tokens[0] != "round" && current_round != NULL)
                 {
                     current_round->addChild(new_item);
                 }
