@@ -8,44 +8,41 @@ static Map the_map = Map::getDefault();
 MainWindow::MainWindow()
     : splitter(new QSplitter(Qt::Horizontal, this)),
       map_view(new MapView(splitter)),
-      moves_widget(new QTreeWidget(splitter))
+      moves_widget(new QTreeWidget(splitter)),
+      current_round(NULL)
 {
     connect(moves_widget, SIGNAL(currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*)),
         SLOT(updateMap(QTreeWidgetItem*)) );
 
-    // Read transcript:
-    QTextStream in(stdin);
-    QString line, map_line;
-    QTreeWidgetItem *current_round = NULL;
-    while (!(line = in.readLine()).isNull())
+    setCentralWidget(splitter);
+}
+
+void MainWindow::addToTranscript(QString line)
+{
+    QStringList tokens = line.split(re_space);
+    if (tokens.size() > 0)
     {
-        QStringList tokens = line.split(re_space);
-        if (tokens.size() > 0)
+        if (tokens.at(0) == "map")
         {
-            if (tokens.at(0) == "map")
+            current_map_line = line;
+        }
+        else
+        {
+            QStringList strings;
+            strings.push_back(line);
+            QTreeWidgetItem *new_item = new QTreeWidgetItem(strings);
+            new_item->setData(0, 1, current_map_line);
+            if (tokens[0] != "round" && current_round != NULL)
             {
-                map_line = line;
+                current_round->addChild(new_item);
             }
             else
             {
-                QStringList strings;
-                strings.push_back(line);
-                QTreeWidgetItem *new_item = new QTreeWidgetItem(strings);
-                new_item->setData(0, 1, map_line);
-                if (tokens[0] != "round" && current_round != NULL)
-                {
-                    current_round->addChild(new_item);
-                }
-                else
-                {
-                    moves_widget->addTopLevelItem(new_item);
-                    if (tokens[0] == "round") current_round = new_item;
-                }
+                moves_widget->addTopLevelItem(new_item);
+                if (tokens[0] == "round") current_round = new_item;
             }
         }
     }
-
-    setCentralWidget(splitter);
 }
 
 void MainWindow::updateMap(QTreeWidgetItem *current_move)

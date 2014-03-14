@@ -8,9 +8,11 @@ HEADERS += Arbiter.h \
            SimplePlayer.h \
            SimplePlayer2.h \
            SimplePlayer3.h \
+           LineReader.h \
            GuiPlayer.h \
            world.h
 SOURCES += Arbiter.cpp \
+           LineReader.cpp \
            MainWindow.cpp \
            MapControl.cpp \
            MapView.cpp \

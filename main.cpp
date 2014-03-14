@@ -4,7 +4,10 @@
 #include "SimplePlayer.h"
 #include "SimplePlayer2.h"
 #include "SimplePlayer3.h"
+#include "LineReader.h"
 #include <QApplication>
+#include <QTextStream>
+#include <QThread>
 #include <assert.h>
 #include <iostream>
 #include <memory>
@@ -30,9 +33,18 @@ int main(int argc, char *argv[])
     {
         // Analysis mode -- read visualization data from stdin.
         QApplication app(argc, argv);
+        QTextStream input(stdin);
+        LineReader reader(input);
         MainWindow main_window;
+        QThread reader_thread;
+        reader.moveToThread(&reader_thread);
+        QObject::connect(&reader_thread, SIGNAL(started()), &reader, SLOT(readLines()));
+        QObject::connect(&reader, SIGNAL(lineRead(QString)), &main_window, SLOT(addToTranscript(QString)));
+        reader_thread.start();
         main_window.show();
-        return app.exec();
+        int res = app.exec();
+        reader_thread.wait();
+        return res;
     }
 
     if (argc == 4 && QString(argv[1]) == "play")

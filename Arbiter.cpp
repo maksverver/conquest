@@ -311,6 +311,6 @@ void Arbiter::log_map(std::vector<int> *reinforcements)
                  << ';' << ( world.occupations[i].armies +
                              (reinforcements ? (*reinforcements)[i] : 0) );
         }
-        *log << '\n';
+        *log << std::endl;
     }
 }
