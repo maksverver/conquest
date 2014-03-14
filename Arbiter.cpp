@@ -1,7 +1,10 @@
 #include "Arbiter.h"
 #include <algorithm>
+#include <random>
 #include <assert.h>
 #include <stdlib.h>
+
+static std::mt19937 rng((std::random_device())());
 
 static const int timeout_ms             = 2000;
 static const int starting_bonus         =    5;
@@ -10,8 +13,8 @@ static const int num_starting_countries =    3;
 // Returns a random Boolean which is 1 with probability num/den (approximately).
 static bool prob(int num, int den)
 {
-    assert(0 <= num && num <= den);  // probability should be between 0 and 1
-    return rand() < ((long long)RAND_MAX + 1)*num/den;
+    std::uniform_int_distribution<> distribution(0, den - 1);
+    return distribution(rng) < num;
 }
 
 static const char *player_name(int player)
@@ -48,7 +51,7 @@ void Arbiter::initialize_bonus()
     bonus[1] = starting_bonus;
 
     // Calculate initial country/continent occupation:
-    for (size_t i = 0; i < world.map.countries.size(); ++i)
+        for (size_t i = 0; i < world.map.countries.size(); ++i)
     {
         int o = world.occupations[i].owner;
         if (o == 0) continue;  // ignore neutral countries
@@ -72,11 +75,11 @@ void Arbiter::pick_starting_countries()
     {
         std::vector<int> countries = world.map.continents[i].countries;
         assert(countries.size() >= 2);
-        std::random_shuffle(countries.begin(), countries.end());
+        std::shuffle(countries.begin(), countries.end(), rng);
         options.push_back(countries[0]);
         options.push_back(countries[1]);
     }
-    std::random_shuffle(options.begin(), options.end());
+    std::shuffle(options.begin(), options.end(), rng);
     assert(options.size() >= 2*num_starting_countries);
 
     // Get preferences from players:
@@ -134,18 +137,17 @@ void Arbiter::play_placement_phase()
 void Arbiter::place_armies( int player, int armies,
                             const std::vector<Placement> &placements )
 {
-    for ( std::vector<Placement>::const_iterator it = placements.begin();
-          it != placements.end(); ++it )
+    for (const Placement &p : placements)
     {
         if (log)
         {
             *log << player_name(player) << " place_armies "
-                 << world.map.countries[it->dst].id
-                 << ' ' << it->armies << '\n';
+                 << world.map.countries[p.dst].id
+                 << ' ' << p.armies << '\n';
         }
-        assert(world.occupations[it->dst].owner == player);
-        world.occupations[it->dst].armies += it->armies;
-        armies -= it->armies;
+        assert(world.occupations[p.dst].owner == player);
+        world.occupations[p.dst].armies += p.armies;
+        armies -= p.armies;
         log_map();
     }
     assert(armies >= 0);

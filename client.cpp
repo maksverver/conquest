@@ -121,9 +121,9 @@ int main()
             {
                 int country_id;
                 std::string neighbours;
-                for (size_t i = 0; i < map.countries.size(); ++i)
+                for (Country &cy : map.countries)
                 {
-                    map.countries[i].neighbours.clear();
+                    cy.neighbours.clear();
                 }
                 while (iss >> country_id >> neighbours)
                 {
@@ -152,9 +152,9 @@ int main()
                         std::cerr << "Unknown country-id: " << country_id << "!\n";
                     }
                 }
-                for (size_t i = 0; i < map.countries.size(); ++i)
+                for (Country &cy : map.countries)
                 {
-                    std::vector<int> &v = map.countries[i].neighbours;
+                    std::vector<int> &v = cy.neighbours;
                     std::sort(v.begin(), v.end());
                     v.erase(std::unique(v.begin(), v.end()), v.end());
                 }
@@ -246,8 +246,7 @@ int main()
                 }
                 else
                 {
-                    for ( std::vector<Placement>::const_iterator it =
-                            placements.begin(); it != placements.end(); ++it )
+                    for (auto it = placements.begin(); it != placements.end(); ++it)
                     {
                         if (it != placements.begin()) std::cout << ',';
                         std::cout << your_bot_id << " place_armies "
@@ -272,8 +271,7 @@ int main()
                 }
                 else
                 {
-                    for ( std::vector<Movement>::const_iterator it =
-                            movements.begin(); it != movements.end(); ++it )
+                    for (auto it = movements.begin(); it != movements.end(); ++it)
                     {
                         if (it != movements.begin()) std::cout << ',';
                         std::cout << your_bot_id << " attack/transfer "

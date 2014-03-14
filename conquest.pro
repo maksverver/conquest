@@ -1,5 +1,8 @@
 CONFIG += debug
 
+QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS_DEBUG += -D_GLIBCXX_DEBUG
+
 HEADERS += Arbiter.h \
            MainWindow.h \
            MapControl.h \
@@ -22,5 +25,3 @@ SOURCES += Arbiter.cpp \
            GuiPlayer.cpp \
            world.cpp \
            main.cpp
-
-QMAKE_CXXFLAGS_DEBUG += -D_GLIBCXX_DEBUG
