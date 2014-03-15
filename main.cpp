@@ -1,13 +1,18 @@
 #include "Arbiter.h"
 #include "MainWindow.h"
+#include "LineReader.h"
+
+/* Players */
 #include "GuiPlayer.h"
 #include "SimplePlayer.h"
 #include "SimplePlayer2.h"
 #include "SimplePlayer3.h"
-#include "LineReader.h"
+#include "Warlord.h"
+
 #include <QApplication>
 #include <QTextStream>
 #include <QThread>
+
 #include <assert.h>
 #include <iostream>
 #include <memory>
@@ -22,6 +27,7 @@ static Player *create_player(QString name)
     if (name == "simple1") return new SimplePlayer();
     if (name == "simple2") return new SimplePlayer2();
     if (name == "simple3") return new SimplePlayer3();
+    if (name == "warlord") return new Warlord();
     return NULL;
 }
 

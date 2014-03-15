@@ -11,6 +11,7 @@ HEADERS += Arbiter.h \
            SimplePlayer.h \
            SimplePlayer2.h \
            SimplePlayer3.h \
+           Warlord.h \
            LineReader.h \
            GuiPlayer.h \
            world.h
@@ -22,6 +23,7 @@ SOURCES += Arbiter.cpp \
            SimplePlayer.cpp \
            SimplePlayer2.cpp \
            SimplePlayer3.cpp \
+           Warlord.cpp \
            GuiPlayer.cpp \
            world.cpp \
            main.cpp

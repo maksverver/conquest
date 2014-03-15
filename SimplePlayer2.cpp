@@ -52,10 +52,11 @@ vector<Placement> SimplePlayer2::place_armies(
         if (neutral_countries + opponent_countries == 0) continue;
 
         int score;
-        score = 500
+        score = 5000
               - 10*(neutral_countries + opponent_countries) 
               - opponent_armies
               + 5*world.map.continents[i].bonus;
+        assert(score > 0);
         if (score > best_score)
         {
             best_score = score;
