@@ -1,4 +1,4 @@
-CONFIG += debug
+#CONFIG += debug
 
 QMAKE_CXXFLAGS += -std=c++0x
 QMAKE_CXXFLAGS_DEBUG += -D_GLIBCXX_DEBUG
@@ -11,6 +11,9 @@ HEADERS += Arbiter.h \
            SimplePlayer.h \
            SimplePlayer2.h \
            SimplePlayer3.h \
+           SimplePlayer4.h \
+           Warlord.h \
+           GuiPlayer.h \
            Warlord.h \
            LineReader.h \
            GuiPlayer.h \
@@ -23,6 +26,8 @@ SOURCES += Arbiter.cpp \
            SimplePlayer.cpp \
            SimplePlayer2.cpp \
            SimplePlayer3.cpp \
+           SimplePlayer4.cpp \
+           GuiPlayer.h \
            Warlord.cpp \
            GuiPlayer.cpp \
            world.cpp \

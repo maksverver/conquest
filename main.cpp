@@ -7,6 +7,7 @@
 #include "SimplePlayer.h"
 #include "SimplePlayer2.h"
 #include "SimplePlayer3.h"
+#include "SimplePlayer4.h"
 #include "Warlord.h"
 
 #include <QApplication>
@@ -27,6 +28,7 @@ static Player *create_player(QString name)
     if (name == "simple1") return new SimplePlayer();
     if (name == "simple2") return new SimplePlayer2();
     if (name == "simple3") return new SimplePlayer3();
+    if (name == "simple4") return new SimplePlayer4();
     if (name == "warlord") return new Warlord();
     return NULL;
 }
